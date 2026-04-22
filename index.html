@@ -642,32 +642,68 @@ footer{background:var(--dp);border-top:1px solid rgba(245,240,232,.06);padding:2
 </section>
 
 <!-- 04 CASES (updated) -->
+<style>
+.proof-stat-num{
+  color:#D4AF37;
+  opacity:0;
+  transform:translateY(20px);
+  animation:fadeUp 0.6s ease forwards;
+}
+
+.proof-stat:nth-child(1) .proof-stat-num{animation-delay:0.2s;}
+.proof-stat:nth-child(3) .proof-stat-num{animation-delay:0.5s;}
+.proof-stat:nth-child(5) .proof-stat-num{animation-delay:0.8s;}
+
+@keyframes fadeUp{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+</style>
+
 <section id="proof">
   <div class="proof-inner">
-    <div class="section-label" data-lang="ua">Результати</div>
-    <div class="section-label" data-lang="ru">Результаты</div>
-    <div class="section-label" data-lang="en">Results</div>
+
     <div class="proof-stats">
       <div class="proof-stat">
         <span class="proof-stat-num">500+</span>
-        <span class="proof-stat-lbl"><span data-lang="ua">сімей з 9 країн</span><span data-lang="ru">семей из 9 стран</span><span data-lang="en">families, 9 countries</span></span>
+        <span class="proof-stat-lbl">
+          <span data-lang="ua">сімей з 9 країн</span>
+          <span data-lang="ru">семей из 9 стран</span>
+          <span data-lang="en">families, 9 countries</span>
+        </span>
       </div>
+
       <div class="proof-sep"></div>
+
       <div class="proof-stat">
         <span class="proof-stat-num">9</span>
-        <span class="proof-stat-lbl"><span data-lang="ua">країн онлайн</span><span data-lang="ru">стран онлайн</span><span data-lang="en">countries online</span></span>
+        <span class="proof-stat-lbl">
+          <span data-lang="ua">країн онлайн</span>
+          <span data-lang="ru">стран онлайн</span>
+          <span data-lang="en">countries online</span>
+        </span>
       </div>
+
       <div class="proof-sep"></div>
+
       <div class="proof-stat">
         <span class="proof-stat-num">30+</span>
-        <span class="proof-stat-lbl"><span data-lang="ua">років практики</span><span data-lang="ru">лет практики</span><span data-lang="en">years of practice</span></span>
+        <span class="proof-stat-lbl">
+          <span data-lang="ua">років практики</span>
+          <span data-lang="ru">лет практики</span>
+          <span data-lang="en">years of practice</span>
+        </span>
       </div>
     </div>
+
     <p style="font-family:var(--f-b);font-size:14px;color:var(--muted);margin-bottom:40px;font-style:italic">
       <span data-lang="ua">Серед них — логопеди, психологи і педагоги, які шукали відповідь для власних дітей.</span>
       <span data-lang="ru">Среди них — логопеды, психологи и педагоги, которые искали ответ для собственных детей.</span>
       <span data-lang="en">Among them — speech therapists, psychologists and teachers looking for answers for their own children.</span>
     </p>
+
   </div>
 </section>
 
