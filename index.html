@@ -337,7 +337,26 @@ footer{background:var(--dp);border-top:1px solid rgba(245,240,232,.06);padding:2
   .hero-note{margin-top:6px}
   .stat-sep{margin:2px 12px}
 }
-</style>
+.proof-stat-num{
+  color:#D4AF37;
+  opacity:0;
+  transform:translateY(20px);
+}
+
+.proof-stat-num.show{
+  animation:fadeUp 0.6s ease forwards;
+}
+
+.proof-stat:nth-child(1) .proof-stat-num.show{animation-delay:0.2s;}
+.proof-stat:nth-child(3) .proof-stat-num.show{animation-delay:0.5s;}
+.proof-stat:nth-child(5) .proof-stat-num.show{animation-delay:0.8s;}
+
+@keyframes fadeUp{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}</style>
 </head>
 <body class="ua">
 
@@ -1302,4 +1321,16 @@ function toggleFaq(btn){
   }
 }
 </script>
-</body></html>
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      document.querySelectorAll('.proof-stat-num').forEach(el=>{
+        el.classList.add('show');
+      });
+      observer.disconnect();
+    }
+  });
+});
+observer.observe(document.querySelector('#proof'));
+</script></body></html>
