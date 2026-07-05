@@ -326,6 +326,36 @@
 
         .form-group input:focus { border-bottom-color: #D4AF37; }
         .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .result-gate-screen {
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .result-gate-screen h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .result-gate-screen p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 28px;
+        }
+
+        .result-status {
+            min-height: 24px;
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #D4AF37;
+        }
+
+        .btn-continue.loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -483,6 +513,17 @@ function buildScreens() {
     });
 
     html += `
+        <div class="screen result-gate-screen" data-screen="${screenIndex}">
+            <h2>Test completed</h2>
+            <p>To see the result, press the button below. We will save your answers first, then show your result on screen.</p>
+            <button class="btn-continue" id="btnGetResults" onclick="handleGetResults()">Get result</button>
+            <div class="result-status" id="saveStatus"></div>
+        </div>
+    `;
+    screens.push({ type: 'resultGate', index: screenIndex });
+    screenIndex++;
+
+    html += `
         <div class="screen results-screen" data-screen="${screenIndex}">
             <h2>Test Results</h2>
             <div class="results-table">
@@ -524,14 +565,15 @@ function showScreen(i) {
     document.querySelector(`[data-screen="${i}"]`).classList.add('active');
     document.getElementById('btnPrev').disabled = (i === 0);
     updateProgress();
+
     if (screens[i] && screens[i].type === 'results') {
         renderResults();
-        if (!dataSent) sendToGoogleSheets();
     }
 }
 
 function nextScreen() {
     const scr = screens[current];
+
     if (scr && scr.type === 'form') {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -541,7 +583,16 @@ function nextScreen() {
         }
         userData = { name, email, age: document.getElementById('childAge').value.trim() };
     }
-    if (current < screens.length - 1) { current++; showScreen(current); }
+
+    if (scr && scr.type === 'resultGate') {
+        handleGetResults();
+        return;
+    }
+
+    if (current < screens.length - 1) {
+        current++;
+        showScreen(current);
+    }
 }
 
 function prevScreen() {
@@ -602,14 +653,62 @@ function renderResults() {
     const interp = document.getElementById('interpretation');
     let interpHtml = '<h3>How to read the results</h3>';
     if (highCount >= 3) {
-        interpHtml += `<p><strong>Over 60% in three or more areas</strong> — a serious signal.</p><p>Dyslexic children are smart. They learn to mask their difficulties so well that adults often don't see how much effort it takes. But the tension keeps building inside.</p><p>Daily stress over schoolwork that refuses to click is a direct road to exhaustion and meltdowns. I recommend not putting this off.</p>`;
+        interpHtml += `<p><strong>Over 60% in three or more areas</strong> — is a serious signal.</p><p>Dyslexic children are bright. They learn to mask their difficulties so well that adults often do not see how much energy it costs. But tension builds up inside.</p><p>Daily stress from learning that does not work is a direct path to exhaustion and breakdowns. I recommend not postponing this.</p>`;
     } else if (midCount >= 3 || highCount >= 1) {
-        interpHtml += `<p><strong>30–60% in several areas</strong> — there's something to work on.</p><p>The child is already spending extra energy on things that come easily to others. The sooner we start, the sooner that energy goes into growth instead of struggle.</p>`;
+        interpHtml += `<p><strong>30–60% у кількох показниках</strong> — means there is something to work on.</p><p>The child is already spending extra energy on things that come easily to others. The earlier we start, the sooner that energy can go into development instead of struggle.</p>`;
     } else {
-        interpHtml += `<p><strong>Under 30% in most areas</strong> — signs are minimal or absent.</p><p>If something still worries you, we can check it during an intro call and put your doubts to rest.</p>`;
+        interpHtml += `<p><strong>Under 30% in most areas</strong> — means signs are minimal or absent.</p><p>If something still worries you, we can check it during an intro call and clarify your doubts.</p>`;
     }
-    interpHtml += '<p style="margin-top: 16px; opacity: 0.7;">The results are the start of a conversation.</p>';
+    interpHtml += '<p style="margin-top: 16px; opacity: 0.7;">The results are the beginning of a conversation.</p>';
     interp.innerHTML = interpHtml;
+}
+
+async function handleGetResults() {
+    const btn = document.getElementById('btnGetResults');
+    const status = document.getElementById('saveStatus');
+
+    if (dataSent) {
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = 'Saving...';
+    }
+
+    if (status) {
+        status.textContent = 'Saving your result...';
+    }
+
+    try {
+        await sendToGoogleSheets();
+
+        if (status) {
+            status.textContent = 'Done. Showing your result.';
+        }
+
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+
+        if (status) {
+            status.textContent = 'Could not save the result. Check your internet connection and try again.';
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = 'Try again';
+        }
+    }
 }
 
 function sendToGoogleSheets() {
@@ -623,17 +722,22 @@ function sendToGoogleSheets() {
         attention: results.attention.percent,
         math: results.math.percent,
         coordination: results.coordination.percent,
-        selfEsteem: results.selfesteem.percent
+        selfEsteem: results.selfesteem.percent,
+        language: 'EN',
+        source: 'EN test'
     };
 
-    fetch(GOOGLE_SCRIPT_URL, {
+    return fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(data)
     })
-    .then(() => { dataSent = true; })
-    .catch(error => { console.error('Error:', error); });
+    .then(() => {
+        dataSent = true;
+        return true;
+    });
 }
 
 buildScreens();

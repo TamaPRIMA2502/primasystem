@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -327,6 +326,36 @@
 
         .form-group input:focus { border-bottom-color: #D4AF37; }
         .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .result-gate-screen {
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .result-gate-screen h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .result-gate-screen p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 28px;
+        }
+
+        .result-status {
+            min-height: 24px;
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #D4AF37;
+        }
+
+        .btn-continue.loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -482,6 +511,7 @@ function buildScreens() {
             screenIndex++;
         });
     });
+
     html += `
         <div class="screen result-gate-screen" data-screen="${screenIndex}">
             <h2>Тест завершён</h2>
@@ -492,6 +522,7 @@ function buildScreens() {
     `;
     screens.push({ type: 'resultGate', index: screenIndex });
     screenIndex++;
+
     html += `
         <div class="screen results-screen" data-screen="${screenIndex}">
             <h2>Результаты тестирования</h2>
@@ -542,6 +573,7 @@ function showScreen(i) {
 
 function nextScreen() {
     const scr = screens[current];
+
     if (scr && scr.type === 'form') {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -551,11 +583,16 @@ function nextScreen() {
         }
         userData = { name, email, age: document.getElementById('childAge').value.trim() };
     }
-        if (scr && scr.type === 'resultGate') {
+
+    if (scr && scr.type === 'resultGate') {
         handleGetResults();
         return;
     }
-    if (current < screens.length - 1) { current++; showScreen(current); }
+
+    if (current < screens.length - 1) {
+        current++;
+        showScreen(current);
+    }
 }
 
 function prevScreen() {
@@ -673,7 +710,8 @@ async function handleGetResults() {
         }
     }
 }
-    function sendToGoogleSheets() {
+
+function sendToGoogleSheets() {
     const results = calculateResults();
     const data = {
         name: userData.name || '',
@@ -684,17 +722,22 @@ async function handleGetResults() {
         attention: results.attention.percent,
         math: results.math.percent,
         coordination: results.coordination.percent,
-        selfEsteem: results.selfesteem.percent
+        selfEsteem: results.selfesteem.percent,
+        language: 'RU',
+        source: 'RU test'
     };
 
-    fetch(GOOGLE_SCRIPT_URL, {
+    return fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(data)
     })
-    .then(() => { dataSent = true; })
-    .catch(error => { console.error('Error:', error); });
+    .then(() => {
+        dataSent = true;
+        return true;
+    });
 }
 
 buildScreens();
