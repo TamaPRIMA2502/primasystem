@@ -326,6 +326,36 @@
 
         .form-group input:focus { border-bottom-color: #D4AF37; }
         .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .result-gate-screen {
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .result-gate-screen h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .result-gate-screen p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 28px;
+        }
+
+        .result-status {
+            min-height: 24px;
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #D4AF37;
+        }
+
+        .btn-continue.loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -346,7 +376,7 @@
 </div>
 
 <script>
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTznR67OEZ4hBBLE_sGHBa0jTRZSaVltBHqNkMGAphdf8ROM1OWenFK7meyoQG82lx/exec?lang=UA';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPtDNZPz0x2Nt2SLDXTzEwQUiR7bpJE284pAXaYpk13y3_vreoW93gaLoHxNvxTFje/exec?lang=UA';
 
 const sections = [
     { title: "Секція 1: Загальні ознаки", questions: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
@@ -483,6 +513,17 @@ function buildScreens() {
     });
 
     html += `
+        <div class="screen result-gate-screen" data-screen="${screenIndex}">
+            <h2>Тест завершено</h2>
+            <p>Щоб побачити результат, натисніть кнопку нижче. Ми збережемо ваші відповіді, а потім покажемо результат на екрані.</p>
+            <button class="btn-continue" id="btnGetResults" onclick="handleGetResults()">Отримати результат</button>
+            <div class="result-status" id="saveStatus"></div>
+        </div>
+    `;
+    screens.push({ type: 'resultGate', index: screenIndex });
+    screenIndex++;
+
+    html += `
         <div class="screen results-screen" data-screen="${screenIndex}">
             <h2>Результати тестування</h2>
             <div class="results-table">
@@ -524,14 +565,15 @@ function showScreen(i) {
     document.querySelector(`[data-screen="${i}"]`).classList.add('active');
     document.getElementById('btnPrev').disabled = (i === 0);
     updateProgress();
+
     if (screens[i] && screens[i].type === 'results') {
         renderResults();
-        if (!dataSent) sendToGoogleSheets();
     }
 }
 
 function nextScreen() {
     const scr = screens[current];
+
     if (scr && scr.type === 'form') {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -541,7 +583,16 @@ function nextScreen() {
         }
         userData = { name, email, age: document.getElementById('childAge').value.trim() };
     }
-    if (current < screens.length - 1) { current++; showScreen(current); }
+
+    if (scr && scr.type === 'resultGate') {
+        handleGetResults();
+        return;
+    }
+
+    if (current < screens.length - 1) {
+        current++;
+        showScreen(current);
+    }
 }
 
 function prevScreen() {
@@ -612,6 +663,54 @@ function renderResults() {
     interp.innerHTML = interpHtml;
 }
 
+async function handleGetResults() {
+    const btn = document.getElementById('btnGetResults');
+    const status = document.getElementById('saveStatus');
+
+    if (dataSent) {
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = 'Зберігаємо...';
+    }
+
+    if (status) {
+        status.textContent = 'Зберігаємо ваш результат...';
+    }
+
+    try {
+        await sendToGoogleSheets();
+
+        if (status) {
+            status.textContent = 'Готово. Показуємо результат.';
+        }
+
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+
+        if (status) {
+            status.textContent = 'Не вдалося зберегти результат. Перевірте інтернет і спробуйте ще раз.';
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = 'Спробувати ще раз';
+        }
+    }
+}
+
 function sendToGoogleSheets() {
     const results = calculateResults();
     const data = {
@@ -623,17 +722,22 @@ function sendToGoogleSheets() {
         attention: results.attention.percent,
         math: results.math.percent,
         coordination: results.coordination.percent,
-        selfEsteem: results.selfesteem.percent
+        selfEsteem: results.selfesteem.percent,
+        language: 'UA',
+        source: 'UA test'
     };
 
-    fetch(GOOGLE_SCRIPT_URL, {
+    return fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(data)
     })
-    .then(() => { dataSent = true; })
-    .catch(error => { console.error('Error:', error); });
+    .then(() => {
+        dataSent = true;
+        return true;
+    });
 }
 
 buildScreens();
