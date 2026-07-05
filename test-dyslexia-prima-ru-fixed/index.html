@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест на дислексию - PRIMA</title>
+  <style>
+    html, body, iframe { margin: 0; width: 100%; height: 100%; border: 0; }
+    body { background: #3D134B; }
+  </style>
+</head>
+<body>
+  <iframe id="testFrame" title="PRIMA dyslexia test"></iframe>
+  <script>
+    const sourceFile = '../test-dyslexia-prima-ru.html?v=ru-fixed-20260705-1';
+    const oldScriptUrl = 'https://script.google.com/macros/s/AKfycbwXcyeq7TjEG2A9bh3VlZPvEz20z8wlf9mmoqHdJsqVCbmANIaDr9WEuxHHGds4kzo_qw/exec';
+    const newScriptUrl = 'https://script.google.com/macros/s/AKfycby0X3BQUt8cluMqMfNcAszwZkxekfUJg3gOhX7eMBXN6JayqSSvyi6DvxJdRjvLIU8L/exec?lang=RU';
+
+    fetch(sourceFile, { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error('Could not load source test file');
+        return response.text();
+      })
+      .then(html => {
+        const patchedHtml = html.replace(oldScriptUrl, newScriptUrl);
+        const blob = new Blob([patchedHtml], { type: 'text/html;charset=utf-8' });
+        document.getElementById('testFrame').src = URL.createObjectURL(blob);
+      })
+      .catch(error => {
+        document.body.innerHTML = '<div style="font-family:Arial,sans-serif;color:white;padding:32px;text-align:center">Не удалось загрузить тест. Обновите страницу или попробуйте позже.</div>';
+        console.error(error);
+      });
+  </script>
+</body>
+</html>
