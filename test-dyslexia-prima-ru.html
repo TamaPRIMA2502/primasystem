@@ -551,6 +551,10 @@ function nextScreen() {
         }
         userData = { name, email, age: document.getElementById('childAge').value.trim() };
     }
+        if (scr && scr.type === 'resultGate') {
+        handleGetResults();
+        return;
+    }
     if (current < screens.length - 1) { current++; showScreen(current); }
 }
 
