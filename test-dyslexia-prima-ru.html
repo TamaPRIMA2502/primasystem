@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -533,9 +534,9 @@ function showScreen(i) {
     document.querySelector(`[data-screen="${i}"]`).classList.add('active');
     document.getElementById('btnPrev').disabled = (i === 0);
     updateProgress();
+
     if (screens[i] && screens[i].type === 'results') {
         renderResults();
-        if (!dataSent) sendToGoogleSheets();
     }
 }
 
