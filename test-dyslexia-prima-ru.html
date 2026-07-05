@@ -481,7 +481,16 @@ function buildScreens() {
             screenIndex++;
         });
     });
-
+    html += `
+        <div class="screen result-gate-screen" data-screen="${screenIndex}">
+            <h2>Тест завершён</h2>
+            <p>Чтобы увидеть результат, нажмите кнопку ниже. Мы сохраним ваши ответы, а затем покажем результат на экране.</p>
+            <button class="btn-continue" id="btnGetResults" onclick="handleGetResults()">Получить результат</button>
+            <div class="result-status" id="saveStatus"></div>
+        </div>
+    `;
+    screens.push({ type: 'resultGate', index: screenIndex });
+    screenIndex++;
     html += `
         <div class="screen results-screen" data-screen="${screenIndex}">
             <h2>Результаты тестирования</h2>
