@@ -626,7 +626,54 @@ function renderResults() {
     interp.innerHTML = interpHtml;
 }
 
-function sendToGoogleSheets() {
+async function handleGetResults() {
+    const btn = document.getElementById('btnGetResults');
+    const status = document.getElementById('saveStatus');
+
+    if (dataSent) {
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = 'Сохраняем...';
+    }
+
+    if (status) {
+        status.textContent = 'Сохраняем ваш результат...';
+    }
+
+    try {
+        await sendToGoogleSheets();
+
+        if (status) {
+            status.textContent = 'Готово. Показываем результат.';
+        }
+
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+
+        if (status) {
+            status.textContent = 'Не удалось сохранить результат. Проверьте интернет и попробуйте ещё раз.';
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = 'Попробовать ещё раз';
+        }
+    }
+}
+    function sendToGoogleSheets() {
     const results = calculateResults();
     const data = {
         name: userData.name || '',
